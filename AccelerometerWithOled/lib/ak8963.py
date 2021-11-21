@@ -148,6 +148,7 @@ class AK8963:
         minz = maxz = reading[2]
 
         while count:
+            print(f"calibrate:{count}")
             utime.sleep_ms(delay)
             reading = self.magnetic
             minx = min(minx, reading[0])
