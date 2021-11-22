@@ -6,6 +6,13 @@ from math import sqrt, atan2, pi, copysign, sin, cos
 
 declination = 13
 
+pitch_bias = 0.0
+roll_bias = 0.0
+
+# For low pass filtering
+filtered_x_value = 0.0 
+filtered_y_value = 0.0
+
 def format_nums(nums):
     ret_strs = ["", "", ""]
     for n in range(3) :
@@ -103,12 +110,7 @@ m = MPU9250(i2c)
 
 # Calibration and bias offset
 m.ak8963.calibrate(count=100)
-pitch_bias = 0.0
-roll_bias = 0.0
 
-# For low pass filtering
-filtered_x_value = 0.0 
-filtered_y_value = 0.0
 
 
 
