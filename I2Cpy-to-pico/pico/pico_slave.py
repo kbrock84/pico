@@ -1,4 +1,25 @@
-from machine import mem32,Pin
+
+
+# pi code example
+#
+# import smbus
+#
+# **** writing ****
+#
+# bus = smbus.SMBus(1)
+# bus.write_byte(0x41,12)
+# bus.write_byte(0x41,15)
+#
+# **** reading ****
+# 
+# bus.read_byte(0x41)
+# bus.read_byte(0x41)
+# bus.read_byte(0x41)
+# bus.read_byte(0x41)
+# bus.read_byte(0x41)
+
+
+from machine import mem32,mem8,Pin
 
 class i2c_slave:
     I2C0_BASE = 0x40044000
@@ -13,10 +34,13 @@ class i2c_slave:
     IC_CON = 0
     IC_TAR = 4
     IC_SAR = 8
-    IC_DATA_CMD = 0x10 
+    IC_DATA_CMD = 0x10
+    IC_RAW_INTR_STAT = 0x34
     IC_RX_TL = 0x38
     IC_TX_TL = 0x3C
     IC_CLR_INTR = 0x40
+    IC_CLR_RD_REQ = 0x50
+    IC_CLR_TX_ABRT = 0x54
     IC_ENABLE = 0x6c
     IC_STATUS = 0x70
     
@@ -58,6 +82,18 @@ class i2c_slave:
         self.set_reg(self.IC_ENABLE, 1)
 
 
+    def anyRead(self):
+        status = mem32[ self.i2c_base | self.IC_RAW_INTR_STAT] & 0x20
+        if status :
+            return True
+        return False
+
+    def put(self, data):
+        # reset flag       
+        self.clr_reg(self.IC_CLR_TX_ABRT,1)
+        status = mem32[ self.i2c_base | self.IC_CLR_RD_REQ]
+        mem32[ self.i2c_base | self.IC_DATA_CMD] = data  & 0xff
+
     def any(self):
         # get IC_STATUS
         status = mem32[ self.i2c_base | self.IC_STATUS]
@@ -71,16 +107,24 @@ class i2c_slave:
             pass
         return mem32[ self.i2c_base | self.IC_DATA_CMD] & 0xff
     
-    if __name__ == "__main__":
-        import utime
-        from machine import mem32
-        from i2cSlave import i2c_slave
-        
-        s_i2c = i2c_slave(0,sda=0,scl=1,slaveAddress=0x41)
-        
-        try:
-            while True:
+    
+#         s_i2c = i2c_slave(1,sda=2,scl=3,slaveAddress=0x41)
+
+if __name__ == "__main__":
+    import utime
+    #from machine import mem32
+    #from i2cSlave import i2c_slave
+    
+    s_i2c = i2c_slave(1,sda=2,scl=3,slaveAddress=0x41)
+    counter =1
+    
+    try:
+        while True:
+            if s_i2c.any():
                 print(s_i2c.get())
-            
-        except KeyboardInterrupt:
-            pass
+            if s_i2c.anyRead():
+                counter = counter + 1
+                s_i2c.put(counter & 0xff)
+        
+    except KeyboardInterrupt:
+        pass
