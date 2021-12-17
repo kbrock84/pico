@@ -107,7 +107,38 @@ class i2c_slave:
             pass
         return mem32[ self.i2c_base | self.IC_DATA_CMD] & 0xff
     
+
+
+def motor_speed(cmd):
+    print(cmd)
+    motor_id = 0
+    if(cmd >= 0x30):
+        motor_id = 1
+        
+    motor_speed = 0x0F & cmd
     
+    print(f"setting speed for motor {str(motor_id)} to {str(motor_speed)}")
+    
+
+def get_orientation(i2c):
+    print(f"getting orientation")
+    i2c.put(0x40 & 0x30)
+    i2c.put(0x40 & 0x30)
+    i2c.put(0x40 & 0x30)
+    print(f"done")
+
+
+
+    
+def i2c_handle(i2c, cmd):
+    if(cmd == 0):
+        print('0 bit received')
+    elif(cmd < 0x40):
+        motor_speed(cmd)
+
+    
+
+
 #         s_i2c = i2c_slave(1,sda=2,scl=3,slaveAddress=0x41)
 
 if __name__ == "__main__":
@@ -117,14 +148,19 @@ if __name__ == "__main__":
     
     s_i2c = i2c_slave(1,sda=2,scl=3,slaveAddress=0x41)
     counter =1
+    print("running slave loop")
     
     try:
         while True:
             if s_i2c.any():
-                print(s_i2c.get())
+                cmd = s_i2c.get()
+                i2c_handle(s_i2c, cmd)
+
             if s_i2c.anyRead():
-                counter = counter + 1
-                s_i2c.put(counter & 0xff)
+                #counter = counter + 1
+                #s_i2c.put(counter & 0xff)
+                get_orientation(s_i2c)
         
     except KeyboardInterrupt:
+        print("keyboard interrupt.. Exiting")
         pass

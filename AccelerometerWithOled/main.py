@@ -89,42 +89,34 @@ def low_pass_filter(raw_value:float, remembered_value):
     filtered = (alpha * remembered_value) + (1.0 - alpha) * raw_value
     return filtered
 
+def run():
 
+    sda=machine.Pin(16)
+    scl=machine.Pin(17)
 
-# running program
+    i2c=machine.I2C(0, sda=sda, scl=scl, freq=200000)
 
-            
+    # addresses 
+    MPU = 0x68
+    id = 0
 
-sda=machine.Pin(16)
-scl=machine.Pin(17)
+    # Scan the bus
+    print(i2c.scan())
+    m = MPU9250(i2c)
 
-i2c=machine.I2C(0, sda=sda, scl=scl, freq=200000)
+    # Calibration and bias offset
+    m.ak8963.calibrate(count=100)
 
-# addresses 
-MPU = 0x68
-id = 0
+    oled = SSD1306_I2C(128, 64, i2c)
 
-# Scan the bus
-print(i2c.scan())
-m = MPU9250(i2c)
-
-# Calibration and bias offset
-m.ak8963.calibrate(count=100)
-
-
-
-
-
-oled = SSD1306_I2C(128, 64, i2c)
-
-for n in range(2000):
-    oled.fill(0)
-    
-    accNums = get_reading()
-    print(accNums)
-    oled.text(f"p: {accNums[3]}", 0, 0)
-    oled.text(f"r: {accNums[4]}", 0, 20)
-    oled.text(f"c: {accNums[5]}", 0, 40)
-    oled.show()
-    
-oled.poweroff()
+    for n in range(2000):
+        oled.fill(0)
+        
+        accNums = get_reading()
+        print(accNums)
+        oled.text(f"p: {accNums[3]}", 0, 0)
+        oled.text(f"r: {accNums[4]}", 0, 20)
+        oled.text(f"h: {accNums[5]}", 0, 40)
+        oled.show()
+        
+    oled.poweroff()
